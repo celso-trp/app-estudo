@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diário de estudo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F5F9;--card:#fff;--ink:#16213A;--muted:#5B6479;--line:#DCE1EA;--accent:#0F7B6C;--onacc:#fff;--danger:#B3372F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1522;--card:#171F31;--ink:#E8ECF5;--muted:#93A0B8;--line:#263048;--accent:#3CC2AC;--onacc:#06231e;--danger:#F08A80}}
+:root[data-theme="dark"]{--bg:#0F1522;--card:#171F31;--ink:#E8ECF5;--muted:#93A0B8;--line:#263048;--accent:#3CC2AC;--onacc:#06231e;--danger:#F08A80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:8px 0 14px;font-weight:800}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:9px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--onacc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.clock{font-size:3.4rem;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin:6px 0 14px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{flex:1;min-height:46px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer;padding:0 14px}
+.btn.main{background:var(--accent);color:var(--onacc);border-color:var(--accent)}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,.day:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+label{display:block;font-weight:600;font-size:.9rem;margin:10px 0 4px}
+input,textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:96px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{color:var(--muted);font-size:.9rem;margin:0}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.nav h2{font-size:1.1rem;margin:0;text-transform:capitalize}
+.nav button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.1rem;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{text-align:center;font-size:.75rem;color:var(--muted);padding-bottom:2px}
+.day{aspect-ratio:1/1.05;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;font-size:.85rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;padding:0}
+.day small{font-size:.66rem;color:var(--muted);min-height:1em}
+.day.l1{background:color-mix(in srgb,var(--accent) 18%,var(--card))}
+.day.l2{background:color-mix(in srgb,var(--accent) 38%,var(--card))}
+.day.l3{background:color-mix(in srgb,var(--accent) 62%,var(--card))}
+.day.today{border-color:var(--ink);border-width:2px}
+.day.sel{outline:3px solid var(--accent);outline-offset:1px}
+.empty{visibility:hidden}
+.sess{border-top:1px solid var(--line);padding:12px 0}
+.sess:first-of-type{border-top:0}
+.sess b{display:block}
+.sess p{margin:4px 0;white-space:pre-wrap}
+.meta{color:var(--muted);font-size:.85rem}
+.del{background:none;border:0;color:var(--danger);font:inherit;font-size:.85rem;cursor:pointer;padding:4px 0}
+[hidden]{display:none!important}
+.wrap{overflow-x:auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.out{flex:none;min-height:36px;padding:0 14px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1>Diário de estudo</h1><button class="btn out" id="logout" hidden>Sair</button></div>
+<form id="auth" class="card" onsubmit="return false" hidden>
+  <h2 style="font-size:1.05rem;margin:0">Entrar</h2>
+  <p class="hint" style="margin-top:4px">Os registos ficam guardados na tua conta e aparecem em todos os dispositivos.</p>
+  <label for="a-mail">Email</label><input id="a-mail" type="email" autocomplete="email">
+  <label for="a-pass">Palavra-passe</label><input id="a-pass" type="password" autocomplete="current-password" minlength="6">
+  <div class="row" style="margin-top:12px"><button class="btn main" id="login" type="button">Entrar</button><button class="btn" id="signup" type="button">Criar conta</button></div>
+  <p class="hint" id="amsg" style="margin-top:8px" hidden></p>
+</form>
+<div id="app" hidden>
+<div class="tabs" role="tablist">
+  <button role="tab" id="t1" aria-selected="true">Registar</button>
+  <button role="tab" id="t2" aria-selected="false">Calendário</button>
+</div>
+
+<section id="v1">
+  <form id="form" class="card" onsubmit="return false">
+    <h2 style="font-size:1.05rem;margin:0">Nova sessão</h2>
+    <div class="two">
+      <div><label for="f-date">Data</label><input id="f-date" type="date"></div>
+      <div><label for="f-min">Tempo (hh:mm:ss)</label><input id="f-min" type="text" inputmode="numeric" placeholder="00:00:00" maxlength="8" autocomplete="off"></div>
+    </div>
+    <label for="f-sub">Disciplina ou tema</label>
+    <input id="f-sub" list="subs" autocomplete="off" placeholder="Ex.: Estética, Harmonia">
+    <datalist id="subs"></datalist>
+    <label for="f-sum">Sumário</label>
+    <textarea id="f-sum" placeholder="O que estudaste nesta sessão?"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn main" id="save" type="button">Guardar sessão</button>
+      <button class="btn" id="clear" type="button">Limpar</button>
+    </div>
+    <p class="hint" id="err" style="color:var(--danger);margin-top:8px" hidden></p>
+  </form>
+</section>
+
+<section id="v2" hidden>
+  <div class="card">
+    <div class="nav">
+      <button id="prev" aria-label="Mês anterior">‹</button>
+      <h2 id="mtitle"></h2>
+      <button id="next" aria-label="Mês seguinte">›</button>
+    </div>
+    <div class="wrap"><div class="grid" id="grid"></div></div>
+    <p class="hint" id="mtotal" style="margin-top:10px"></p>
+  </div>
+  <div class="card">
+    <h2 id="dtitle" style="font-size:1.05rem;margin:0 0 6px"></h2>
+    <div id="dlist"></div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:1.05rem;margin:0 0 6px">Exportar</h2>
+    <label for="xrange" style="margin-top:0">O que exportar</label>
+    <select id="xrange"><option value="m">Mês que estou a ver</option><option value="all">Todas as sessões</option></select>
+    <div class="row" style="margin-top:12px">
+      <button class="btn main" id="xls" type="button">Excel</button>
+      <button class="btn main" id="pdf" type="button">PDF</button>
+    </div>
+    <p class="hint" id="xmsg" style="margin-top:8px" hidden></p>
+  </div>
+</section>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const SB=supabase.createClient('https://gsastkuupvpjweiyklgp.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzYXN0a3V1cHZwandlaXlrbGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NzgyNjAsImV4cCI6MjEwNjE1NDI2MH0.e5tp35O85fdv9jFUr2lZJMHwFxPXIJfg4_3fI6gPnNc');
+let sessions=[];
+
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const secOf=s=>s.sec!=null?s.sec:s.min*60;
+const hms=t=>pad(Math.floor(t/3600))+':'+pad(Math.floor(t%3600/60))+':'+pad(t%60);
+const short=t=>{if(t<60)return t+'s';const h=Math.floor(t/3600),m=Math.floor(t%3600/60);return h?h+'h'+(m?pad(m):''):m+' min'};
+const todayIso=()=>iso(new Date());
+let view=new Date();view.setDate(1);
+let sel=todayIso();
+
+/* Separadores */
+function tab(n){
+  $('#v1').hidden=n!==1;$('#v2').hidden=n!==2;
+  $('#t1').setAttribute('aria-selected',n===1);$('#t2').setAttribute('aria-selected',n===2);
+  if(n===2)renderCal();
+}
+$('#t1').onclick=()=>tab(1);$('#t2').onclick=()=>tab(2);
+
+/* Formulário */
+function resetForm(){
+  $('#f-date').value=todayIso();$('#f-min').value='';$('#f-sub').value='';$('#f-sum').value='';
+  $('#err').hidden=true;
+  const subs=[...new Set(sessions.map(s=>s.subject).filter(Boolean))];
+  $('#subs').innerHTML=subs.map(s=>'<option value="'+s.replace(/"/g,'&quot;')+'">').join('');
+}
+$('#clear').onclick=resetForm;
+$('#f-min').addEventListener('input',e=>{
+  const d=e.target.value.replace(/\D/g,'').slice(-6);
+  e.target.value=d?d.padStart(6,'0').replace(/(\d\d)(\d\d)(\d\d)/,'$1:$2:$3'):'';
+});
+$('#save').onclick=async()=>{
+  const date=$('#f-date').value,m=/^(\d\d):(\d\d):(\d\d)$/.exec($('#f-min').value);
+  const sec=m?(+m[1])*3600+(+m[2])*60+(+m[3]):0;
+  const bad=!date||!sec?'Indica a data e o tempo (00:00:00).':(+m[2]>59||+m[3]>59)?'Minutos e segundos têm de ser inferiores a 60.':'';
+  if(bad){$('#err').textContent=bad;$('#err').hidden=false;return}
+  const {error}=await SB.from('sessoes').insert({data:date,segundos:sec,disciplina:$('#f-sub').value.trim(),sumario:$('#f-sum').value.trim()});
+  if(error){$('#err').textContent='Não foi possível guardar. Tenta outra vez.';$('#err').hidden=false;return}
+  await loadSessions();
+  sel=date;view=new Date(date+'T12:00:00');view.setDate(1);
+  resetForm();tab(2);
+};
+
+/* Calendário */
+function renderCal(){
+  const y=view.getFullYear(),m=view.getMonth();
+  $('#mtitle').textContent=view.toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
+  const tot={};let monthMin=0,monthN=0;
+  sessions.forEach(s=>{tot[s.date]=(tot[s.date]||0)+secOf(s);if(s.date.slice(0,7)===y+'-'+pad(m+1)){monthMin+=secOf(s);monthN++}});
+  let h=['seg','ter','qua','qui','sex','sáb','dom'].map(d=>'<div class="wd">'+d+'</div>').join('');
+  const off=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+  for(let i=0;i<off;i++)h+='<div class="empty"></div>';
+  for(let d=1;d<=days;d++){
+    const k=y+'-'+pad(m+1)+'-'+pad(d),t=tot[k]||0;
+    const lv=!t?'':t<1800?' l1':t<5400?' l2':' l3';
+    h+='<button class="day'+lv+(k===todayIso()?' today':'')+(k===sel?' sel':'')+'" data-d="'+k+'" aria-label="'+d+', '+(t?hms(t):'sem estudo')+'">'+d+'<small>'+(t?short(t):'')+'</small></button>';
+  }
+  $('#grid').innerHTML=h;
+  $('#mtotal').textContent=monthN?('Neste mês: '+hms(monthMin)+' em '+monthN+(monthN>1?' sessões':' sessão')+'.'):'Sem sessões neste mês.';
+  document.querySelectorAll('.day').forEach(b=>b.onclick=()=>{sel=b.dataset.d;renderCal()});
+  renderDay();
+}
+function esc(t){return t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderDay(){
+  const list=sessions.filter(s=>s.date===sel);
+  const d=new Date(sel+'T12:00:00');
+  const total=list.reduce((a,s)=>a+secOf(s),0);
+  $('#dtitle').textContent=d.toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long'})+(total?' · '+hms(total):'');
+  $('#dlist').innerHTML=list.length?list.map(s=>'<div class="sess"><b>'+esc(s.subject||'Sem disciplina')+'</b><span class="meta">'+hms(secOf(s))+'</span>'+(s.summary?'<p>'+esc(s.summary)+'</p>':'')+'<button class="del" data-id="'+s.id+'">Apagar sessão</button></div>').join(''):'<p class="hint">Sem sessões neste dia. Vai a Registar para adicionar uma.</p>';
+  document.querySelectorAll('.del').forEach(b=>b.onclick=async()=>{
+    if(!confirm('Apagar esta sessão?'))return;
+    const {error}=await SB.from('sessoes').delete().eq('id',b.dataset.id);
+    if(!error){sessions=sessions.filter(s=>String(s.id)!==b.dataset.id);renderCal()}
+  });
+}
+$('#prev').onclick=()=>{view.setMonth(view.getMonth()-1);renderCal()};
+$('#next').onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
+
+/* Exportar */
+const dpt=d=>d.split('-').reverse().join('/');
+const note=t=>{const e=$('#xmsg');e.textContent=t;e.hidden=!t};
+const allSel=()=>$('#xrange').value==='all';
+function rows(){
+  const pre=view.getFullYear()+'-'+pad(view.getMonth()+1);
+  return sessions.filter(s=>allSel()||s.date.slice(0,7)===pre).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
+}
+const fname=ext=>'estudo-'+(allSel()?'total':view.getFullYear()+'-'+pad(view.getMonth()+1))+'.'+ext;
+function saveFile(name,data){
+  const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);note('');
+}
+$('#xls').onclick=()=>{
+  const l=rows();
+  if(!l.length){note('Não há sessões para exportar.');return}
+  if(!window.XLSX){note('A biblioteca de Excel não carregou. Tenta outra vez.');return}
+  const aoa=[['Data','Disciplina','Tempo (hh:mm:ss)','Sumário']].concat(l.map(s=>[dpt(s.date),s.subject,secOf(s)/86400,s.summary]));
+  aoa.push([],['Total','',l.reduce((a,s)=>a+secOf(s),0)/86400,'']);
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:12},{wch:22},{wch:16},{wch:70}];
+  for(let r=2;r<=aoa.length;r++){const c=ws['C'+r];if(c&&typeof c.v==='number')c.z='[h]:mm:ss'}
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Estudo');
+  saveFile(fname('xlsx'),new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})]));
+};
+$('#pdf').onclick=()=>{
+  const l=rows();
+  if(!l.length){note('Não há sessões para exportar.');return}
+  if(!window.jspdf){note('A biblioteca de PDF não carregou. Tenta outra vez.');return}
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'}),W=210,M=16,TW=W-2*M;
+  let y=M;
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('Diário de estudo',M,y);y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(10);
+  const tot=l.reduce((a,s)=>a+secOf(s),0);
+  const per=allSel()?'Todas as sessões':view.toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
+  doc.text(per+' · '+l.length+(l.length>1?' sessões':' sessão')+' · '+hms(tot),M,y);y+=8;
+  l.forEach(s=>{
+    if(y>297-M-12){doc.addPage();y=M}
+    doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.text(dpt(s.date)+'  ·  '+(s.subject||'Sem disciplina')+'  ·  '+hms(secOf(s)),M,y);y+=5.5;
+    doc.setFont('helvetica','normal');doc.setFontSize(10);
+    doc.splitTextToSize(s.summary||'',TW).forEach(t=>{
+      if(y>297-M){doc.addPage();y=M}
+      doc.text(t,M,y);y+=5;
+    });
+    y+=2;doc.setDrawColor(200);doc.line(M,y,W-M,y);y+=6;
+  });
+  saveFile(fname('pdf'),doc.output('blob'));
+};
+
+/* Conta e dados */
+async function loadSessions(){
+  const {data,error}=await SB.from('sessoes').select('id,data,segundos,disciplina,sumario').order('data');
+  sessions=error?[]:data.map(r=>({id:r.id,date:r.data,sec:r.segundos,subject:r.disciplina,summary:r.sumario}));
+}
+async function show(session){
+  $('#auth').hidden=!!session;$('#app').hidden=!session;$('#logout').hidden=!session;
+  if(session){await loadSessions();resetForm();renderCal()}
+}
+const amsg=t=>{const e=$('#amsg');e.textContent=t;e.hidden=!t};
+const cred=()=>({email:$('#a-mail').value.trim(),password:$('#a-pass').value});
+$('#login').onclick=async()=>{
+  const {error}=await SB.auth.signInWithPassword(cred());
+  amsg(error?'Email ou palavra-passe incorretos.':'');
+};
+$('#signup').onclick=async()=>{
+  const {data,error}=await SB.auth.signUp(cred());
+  amsg(error?'Não foi possível criar a conta: '+error.message:(data.session?'':'Conta criada. Confirma o email que recebeste e depois entra.'));
+};
+$('#logout').onclick=()=>SB.auth.signOut();
+SB.auth.onAuthStateChange((ev,session)=>{
+  if(['INITIAL_SESSION','SIGNED_IN','SIGNED_OUT'].includes(ev))setTimeout(()=>show(session),0);
+});
+
+resetForm();
+</script>
+</body>
+</html>
